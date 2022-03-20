@@ -6,11 +6,11 @@ import authenticationRoutes from './routes/authentication'
 import usersRoutes from './routes/users'
 import { createRoles } from './libs/initSetup'
 import { createFolder } from './config'
-//  import { randomBytes } from 'crypto'
+// import { randomBytes } from 'crypto'
 const app = express()
 createFolder(['uploads/profile'])
 createRoles()
-//  console.log(randomBytes(64).toString('hex'))
+// console.info(randomBytes(64).toString('hex'))
 app.set('pkg', pkg)
 // app.use(morgan('dev'))
 app.use(express.json())
@@ -20,6 +20,6 @@ app.get('/', (req, res) => {
   res.json({ author, name, description, version })
 })
 app.use('/api/places', placesRoutes)
-app.use('/api/authentication', authenticationRoutes)
+app.use('/api/auth', authenticationRoutes)
 app.use('/api/users', usersRoutes)
 export default app
