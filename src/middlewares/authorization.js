@@ -31,38 +31,55 @@ export const tokenVerification = async (req, res, next) => {
     res.status(401).json({ message: jwtErrors[error.name] ?? error.name })
   }
 }
-export const isModerator = async (req, res, next) => {
-  const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-  for (const role of user.roles) {
-    if (role.name === 'Moderator') {
-      next()
-      return
-    }
-  }
-  res.status(403).json(getMessageResponse({ role: 'Moderator' }))
-}
-export const isAdmin = async (req, res, next) => {
-  const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-  for (const role of user.roles) {
-    if (role.name === 'Admin') {
-      next()
-      return
-    }
-  }
-  res.status(403).json(getMessageResponse({ role: 'Admin' }))
-}
-export const isSeller = async (req, res, next) => {
-  const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-  for (const role of user.roles) {
-    if (role.name === 'Seller') {
-      next()
-      return
-    }
-  }
-  res.status(403).json(getMessageResponse({ role: 'Seller' }))
+// export const isModerator = async (req, res, next) => {
+//   const role = 'Moderator'
+//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
+//   for (const role of user.roles) {
+//     if (role.name === role) {
+//       next()
+//       return
+//     }
+//   }
+//   returnRoleRequire({ res, role })
+//   // res.status(403).json(getMessageResponse({ role: 'Moderator' }))
+// }
+// export const isAdmin = async (req, res, next) => {
+//   const role = 'Admin'
+//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
+//   for (const role of user.roles) {
+//     if (role.name === role) {
+//       next()
+//       return
+//     }
+//   }
+//   returnRoleRequire({ res, role })
+//   // res.status(403).json(getMessageResponse({ role: 'Admin' }))
+// }
+// export const isSeller = async (req, res, next) => {
+//   const role = 'Seller'
+//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
+//   for (const Role of user.roles) {
+//     if (Role.name === role) {
+//       next()
+//       return
+//     }
+//   }
+//   returnRoleRequire({ res, role })
+//   // res.status(403).json(getMessageResponse({ role: 'Seller' }))
+// }
+
+const returnRoleRequire = ({ res, role }) => {
+  res.status(403).json({ message: `Require ${role} Role` })
 }
 
-const getMessageResponse = ({ role }) => {
-  return { message: `Require ${role} Role` }
+export const roleValidation = async (req, res, next) => {
+  const { roleRequire: role } = req.body
+  const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
+  for (const Role of user.roles) {
+    if (Role.name === role) {
+      next()
+      return
+    }
+  }
+  returnRoleRequire({ res, role })
 }
-// (getMessageResponse('admin'))()
