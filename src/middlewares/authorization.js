@@ -31,55 +31,12 @@ export const tokenVerification = async (req, res, next) => {
     res.status(401).json({ message: jwtErrors[error.name] ?? error.name })
   }
 }
-// export const isModerator = async (req, res, next) => {
-//   const role = 'Moderator'
-//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-//   for (const role of user.roles) {
-//     if (role.name === role) {
-//       next()
-//       return
-//     }
-//   }
-//   returnRoleRequire({ res, role })
-//   // res.status(403).json(getMessageResponse({ role: 'Moderator' }))
-// }
-// export const isAdmin = async (req, res, next) => {
-//   const role = 'Admin'
-//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-//   for (const role of user.roles) {
-//     if (role.name === role) {
-//       next()
-//       return
-//     }
-//   }
-//   returnRoleRequire({ res, role })
-//   // res.status(403).json(getMessageResponse({ role: 'Admin' }))
-// }
-// export const isSeller = async (req, res, next) => {
-//   const role = 'Seller'
-//   const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-//   for (const Role of user.roles) {
-//     if (Role.name === role) {
-//       next()
-//       return
-//     }
-//   }
-//   returnRoleRequire({ res, role })
-//   // res.status(403).json(getMessageResponse({ role: 'Seller' }))
-// }
-
-const returnRoleRequire = ({ res, role }) => {
-  res.status(403).json({ message: `Require ${role} Role` })
-}
 
 export const roleValidation = async (req, res, next) => {
-  const { roleRequire: role } = req.body
-  const user = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
-  for (const Role of user.roles) {
-    if (Role.name === role) {
-      next()
-      return
-    }
-  }
-  returnRoleRequire({ res, role })
+  const { rolesRequire } = req.body
+  const rolesArray = rolesRequire ?? ['Admin']
+  const { roles } = await User.findOne({ _id: req.userId }, { noNeededInfo }).populate('roles')
+  const rolesUser = roles.map((data) => data.name)
+  if (!rolesArray.some((roleRequire) => rolesUser.includes(roleRequire))) return res.status(403).json({ error: 'Rol asignado no autorizado' })
+  return next()
 }

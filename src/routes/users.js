@@ -1,14 +1,10 @@
 import { Router } from 'express'
 import * as userController from '../controllers/users'
-import * as authorization from '../middlewares/authorization'
 import { roleAssign } from '../libs/validations'
+import { roleValidation, tokenVerification } from '../middlewares/authorization'
+
 // import multer from 'multer'
 const router = Router()
-
-// const roleAssign = (req, res, next, role) => {
-//   req.body.roleRequire = role
-//   next()
-// }
 
 // const store = multer.diskStorage({
 //   destination: (req, file, cb) => {
@@ -24,33 +20,32 @@ const router = Router()
 // const upload = multer({ storage: store })
 
 router.get('/', [
-  authorization.tokenVerification,
-  (req, res, next) => {
-    roleAssign({ req, res, next, role: 'Moderator' })
-  }
-  // authorization.isModerator
+  (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin'] }),
+  tokenVerification,
+  roleValidation
 ], userController.getAllUsers)
 
 router.get('/:userId', [
-  authorization.tokenVerification
+  (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
+  tokenVerification,
+  roleValidation
 ], userController.getUserInfo)
 
 router.put('/:userId', [
-  authorization.tokenVerification,
-  (req, res, next) => {
-    return roleAssign({ req, res, next, role: 'Moderator' })
-  },
-  authorization.roleValidation/* authorization.isModerator */
+  (req, res, next) => roleAssign({ req, next, role: ['Moderator', 'Admin', 'User'] }),
+  tokenVerification,
+  roleValidation
 ], userController.updateUser)
 
 router.delete('/:userId', [
-  authorization.tokenVerification
-  // authorization.isAdmin
+  (req, res, next) => roleAssign({ req, next, role: ['Moderator', 'Admin', 'User'] }),
+  tokenVerification,
+  roleValidation
 ], userController.deleteUser)
 
-router.post('/photo/:userId', [
-  authorization.tokenVerification, /*  upload.single('avatar'),  */
-  userController.prepareToUpdateImage
-], userController.updateUser)
+// router.post('/photo/:userId', [
+//   tokenVerification, /*  upload.single('avatar'),  */
+//   userController.prepareToUpdateImage
+// ], userController.updateUser)
 
 export default router

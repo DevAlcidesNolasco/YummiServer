@@ -1,9 +1,18 @@
 import { Router } from 'express'
+
+// import { roleAssign } from '../libs/validations'
+// import { roleValidation, tokenVerification } from '../middlewares/authorization'
+
 import * as placesController from '../controllers/places'
 import * as authorization from '../middlewares/authorization'
 const router = Router()
 
 router.get('/', placesController.getPlaces)
+// [
+// (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
+// tokenVerification,
+// roleValidation
+// ],
 
 router.get('/similar/:placeId', [
   authorization.tokenVerification
