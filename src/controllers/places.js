@@ -1,20 +1,27 @@
 import Place from '../models/places'
 import { isValidObjectId } from '../libs/validations'
+
+const errorHandler = ({ error }) => {
+  const { errors } = error
+  const errorArray = Object.entries(errors)
+  return {
+    error: errorArray.map((err) => {
+      return err[1].message
+    })
+  }
+}
+
 export const getPlaces = async (req, res) => {
   // obtener distancia, ubicacion, y filtros de la busqueda
   // validar datos de entrada
   // buscar en la base de datos los sitios cercanos
   // contar el resultado
-  const { distance = 300, coordinates = [13.482903, -88.175427] } = req.body
-  if (typeof (distance) !== 'number') {
-    return res.json({
-      message: 'Dato de la distancia erroneo'
-    })
-  }
-  if (typeof (coordinates) !== 'object' || coordinates.length < 2) {
-    return res.json({ message: 'No ha proporcionado ubicación' })
-  }
-  const { filters = { delivery: null, service: null } } = req.body
+  let { distance = 300 } = req.body
+  const { coordinates = [13.482903, -88.175427] } = req.body
+  distance = parseInt(distance, 10)
+  const distanceIsInteger = Number.isInteger(distance)
+  const coordinatesIsAnArrayValid = Array.isArray(coordinates) && coordinates.length === 2
+  if (!(distanceIsInteger && coordinatesIsAnArrayValid)) return res.status(400).json({ error: 'Parametros incorrectos' })
   const places = await Place.find({
     location: {
       $nearSphere: {
@@ -26,31 +33,24 @@ export const getPlaces = async (req, res) => {
       }
     }
   })
-  const isFiltered = Object.values(filters).some((filterValue) => filterValue !== null)
-  console.log(isFiltered)
-  // const arrayFilters = Object.entries(filters)
-  // arrayFilters.forEach((filter) => {
-  //     if (filter[1]) {
-  //         console.log(filter[1])
-  //         places.where(filter[0], filter[1])
-  //     }
-  // })
-  res.json({
-    result: places,
-    count: places.length
+  return res.status(200).json({ result: places })
+}
+
+// obtener informacion de las propiedades del sitio
+// guarda en la base de datos el sitio
+export const createPlace = async (req, res) => {
+  let { place } = req.body
+  place = new Place({ ...place })
+  place.save(function (error) {
+    if (error) return res.status(400).json(errorHandler({ error }))
+    return res.status(200).json(place)
   })
 }
-export const createPlace = async (req, res) => {
-  // obtener informacion de las propiedades del sitio
-  // guarda en la base de datos el sitio
-  const preparedPlace = new Place(req.body)
-  const savedPlace = await preparedPlace.save()
-  res.status(201).json(savedPlace)
-}
+
+// obtener ID del sitio
+// obtener objeto con nuevas valores del sitio
+// actualizar el sitio con ID
 export const putPlace = async (req, res) => {
-  // obtener ID del sitio
-  // obtener objeto con nuevas valores del sitio
-  // actualizar el sitio con ID
   const { placeId } = req.params
   if (!placeId) {
     return res.json({

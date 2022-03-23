@@ -6,18 +6,21 @@ import authenticationRoutes from './routes/authentication'
 import usersRoutes from './routes/users'
 import { createRoles } from './libs/initSetup'
 import { createFolder } from './config'
+import helmet from 'helmet'
 // import { randomBytes } from 'crypto'
 const app = express()
+app.disable('x-powered-by')
+app.use(helmet())
+app.set('pkg', pkg)
+app.use(express.json())
+
 createFolder(['uploads/profile'])
 createRoles()
 // console.info(randomBytes(64).toString('hex'))
-app.set('pkg', pkg)
-// app.use(morgan('dev'))
-app.use(express.json())
 app.use('/gallery/profile', express.static('./uploads/profile'))
 app.get('/', (req, res) => {
   const { name, author, description, version } = app.get('pkg')
-  res.json({ author, name, description, version })
+  return res.json({ author, name, description, version })
 })
 app.use('/api/places', placesRoutes)
 app.use('/api/auth', authenticationRoutes)
