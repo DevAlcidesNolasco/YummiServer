@@ -1,44 +1,44 @@
 import User from '../models/users'
-import { isValidObjectId } from '../libs/validations'
+import Role from '../models/roles'
 
-// OJO -------------------------------------------------------
-// ********sanitizar el userID en el archivo /routes/users.js
-
-export const getUserInfo = async (req, res) => {
-  const { userId } = req.params
-  if (!userId) return res.json({ message: 'No se ha proporcionado id de usuario' })
-  if (!isValidObjectId(userId)) return res.json({ message: 'Id no valido' })
-  const userFound = await User.findOne({ _id: userId }, { password: 0 })
-  res.json(userFound)
-}
 export const getAllUsers = async (req, res) => {
-  return res.json(await User.find({}, { password: 0, createdAt: 0, updatedAt: 0 }).populate('roles'))
+  return res.status(200).json(await User.find({}, { password: 0, createdAt: 0, updatedAt: 0 }).populate('roles'))
 }
-export const updateUser = async (req, res) => {
+
+export const getUserById = async (req, res) => {
   const { userId } = req.params
-  const { body } = req
-  if (!userId) return res.json({ message: 'No se ha proporcionado id de usuario' })
-  if (!isValidObjectId(userId)) return res.json({ message: 'Id no valido' })
-  //  if (req.userId === userId) return res.json({ message: 'No se puede actualizar usted mismo' })
-  console.log('updateUser', body)
-  const userUpdated = await User.findOneAndUpdate({ _id: userId }, body, { new: true })
-  res.json({
-    userUpdated
+  const user = await User.findOne({ _id: userId }, { password: 0 })
+  if (!user) return res.status(404).json({ error: 'Usuario no encontrado' })
+  return res.status(200).json({ user })
+}
+
+export const updateUserById = async (req, res) => {
+  const { userId } = req.params
+  const { user } = req.body
+  delete user._id
+  delete user.password
+  const updatedUser = await User.findOneAndUpdate({ _id: userId }, { $set: { ...user } }, { new: true, projection: { password: 0 } })
+  if (!updatedUser) return res.status(400).json({ error: 'No se pudo realizar la acción' })
+  return res.status(200).json({
+    user: updatedUser,
+    message: 'Se realizó accion exitosamente'
   })
 }
-export const deleteUser = async (req, res) => {
+
+export const deleteUserById = async (req, res) => {
   const { userId } = req.params
-  if (!userId) return res.json({ message: 'No se ha proporcionado id de usuario' })
-  if (!isValidObjectId(userId)) return res.json({ message: 'Id no valido' })
-  if (req.userId === userId) return res.json({ message: 'No se puede eliminar usted mismo' })
-  const userDeleted = await User.findOneAndDelete({ _id: userId })
-  if (!userDeleted) return res.json({ message: 'Usuario no existe' })
-  res.json(userDeleted)
+  const userDeleted = await User.findOneAndDelete({ _id: userId }, { new: true, projection: { password: 0 } })
+  if (!userDeleted) return res.json({ error: 'No se pudo realizar accion' })
+  return res.status(200).json(userDeleted)
 }
-export const prepareToUpdateImage = (req, res, next) => {
-  const { file } = req
-  const { filename } = file
-  const photoUrl = `${req.protocol}://${req.get('host')}/gallery/profile/${filename}`
-  req.body = { photoUrl }
-  next()
+
+export const getUserRoles = async (req, res) => {
+  const rolesArray = await Role.find({})
+  if (rolesArray === null) return res.json({ error: 'No se pudieron recuperar roles' })
+  return res.status(200).json({ result: rolesArray })
 }
+
+// export const updateAllUsers = async (req, res) => {
+//   const { filter } = req.body
+//   return res.json({ message: `Editin all user where ${filter}` })
+// }

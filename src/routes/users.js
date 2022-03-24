@@ -1,11 +1,40 @@
 import { Router } from 'express'
 import * as userController from '../controllers/users'
-import { roleAssign } from '../libs/validations'
+import { roleAssign, objectIdValidation } from '../libs/validations'
 import { roleValidation, tokenVerification } from '../middlewares/authorization'
-
-// import multer from 'multer'
 const router = Router()
 
+router.route('/')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin'] }),
+    tokenVerification,
+    roleValidation
+  ])
+  .get(userController.getAllUsers)
+  // .put(userController.updateAllUsers)
+
+router.route('/roles')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Admin'] }),
+    tokenVerification,
+    roleValidation
+  ])
+  .get(userController.getUserRoles)
+
+router.route('/:userId')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
+    tokenVerification,
+    roleValidation,
+    objectIdValidation
+  ])
+  .get(userController.getUserById)
+  .put(userController.updateUserById)
+  .delete(userController.deleteUserById)
+
+export default router
+
+// import multer from 'multer'
 // const store = multer.diskStorage({
 //   destination: (req, file, cb) => {
 //     cb(null, 'uploads/profile')
@@ -16,36 +45,9 @@ const router = Router()
 //     cb(null, `${uniqueName}.${extension}`)
 //   }
 // })
-
 // const upload = multer({ storage: store })
-
-router.get('/', [
-  (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin'] }),
-  tokenVerification,
-  roleValidation
-], userController.getAllUsers)
-
-router.get('/:userId', [
-  (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
-  tokenVerification,
-  roleValidation
-], userController.getUserInfo)
-
-router.put('/:userId', [
-  (req, res, next) => roleAssign({ req, next, role: ['Moderator', 'Admin', 'User'] }),
-  tokenVerification,
-  roleValidation
-], userController.updateUser)
-
-router.delete('/:userId', [
-  (req, res, next) => roleAssign({ req, next, role: ['Moderator', 'Admin', 'User'] }),
-  tokenVerification,
-  roleValidation
-], userController.deleteUser)
 
 // router.post('/photo/:userId', [
 //   tokenVerification, /*  upload.single('avatar'),  */
 //   userController.prepareToUpdateImage
 // ], userController.updateUser)
-
-export default router

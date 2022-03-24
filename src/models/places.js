@@ -3,11 +3,11 @@ const socialMediaSchema = new Schema({
   media: {
     type: String,
     enum: ['Instagram', 'Facebook', 'Twitter'],
-    required: true
+    required: [true, 'Plataforma no permitida']
   },
   user: {
     type: String,
-    require: true
+    require: [true, 'Formato usuario no valido']
   }
 })
 const contactSchema = new Schema({

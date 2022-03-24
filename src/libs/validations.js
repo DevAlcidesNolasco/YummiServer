@@ -1,8 +1,21 @@
 import { body, validationResult } from 'express-validator'
+import { Types } from 'mongoose'
+const { ObjectId } = Types
 
 const getErrorMessageArray = (array) => array.map((error) => error.msg)
 
-export const isValidObjectId = (id) => id.match(/^[0-9a-fA-F]{24}$/)
+export const objectIdValidation = (req, res, next) => {
+  let { userId } = req.params
+  try {
+    if (userId instanceof Object) return res.status(400).json({ error: 'Parametro id is an object' })
+    userId = new ObjectId(userId)
+    if (!ObjectId.isValid(userId)) return res.status(400).json({ error: 'Parametro id invalido' })
+    return next()
+    // console.info(userId)
+  } catch (error) {
+    return res.json({ error: 'Parametro id invalido' })
+  }
+}
 
 export const roleAssign = ({ req, next, roles }) => {
   req.body.rolesRequire = roles

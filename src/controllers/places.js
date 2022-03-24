@@ -168,7 +168,7 @@ export const similarPlaces = async (req, res) => {
 export const getLikes = async (req, res) => {
   // obtener el ID del usuario
   // obtener todos los sitios que el usuario ha likeado
-  const { userId } = req
+  const { userId } = req.body
   console.log(userId)
   const likedPlaces = await Place.find({
     rating: {
