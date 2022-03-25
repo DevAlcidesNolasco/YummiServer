@@ -34,11 +34,6 @@ export const deleteUserById = async (req, res) => {
 
 export const getUserRoles = async (req, res) => {
   const rolesArray = await Role.find({})
-  if (rolesArray === null) return res.json({ error: 'No se pudieron recuperar roles' })
+  if (!rolesArray) return res.json({ error: 'No se pudieron recuperar roles' })
   return res.status(200).json({ result: rolesArray })
 }
-
-// export const updateAllUsers = async (req, res) => {
-//   const { filter } = req.body
-//   return res.json({ message: `Editin all user where ${filter}` })
-// }

@@ -2,22 +2,40 @@ import { Router } from 'express'
 // import { roleAssign } from '../libs/validations'
 import { /* roleValidation,   */ tokenVerification } from '../middlewares/authorization'
 import * as placesController from '../controllers/places'
-// import * as authorization from '../middlewares/authorization'
 const router = Router()
 
-router.route('/').get(placesController.getPlaces).post(placesController.createPlace)
+// END POINTS
+// +  obtener todos los lugares
+// +  obtener lugares cerca
+// +  obtener lugar por ID
+// +  crear un nuevo lugar
+// +  editar un lugar
+// +  eliminiar un lugar
+// +  interaccion like a un lugar
+// +  mostrar lugares recomendados segun gustos de usuario
+// +  mostrar lugares recomendados segun categorias de lugar principal
+// +  mostrar lugares similares a lugar referente
 
-router.route('/:placeId').get(placesController.getPlace).put([tokenVerification], placesController.putPlace).delete([tokenVerification])
+router.route('/')
+  .get(placesController.getPlaces)
+  .post(placesController.createPlace)
+
+router.route('/:placeId')
+  .get(placesController.getPlace)
+  .put([tokenVerification], placesController.putPlace)
+  .delete([tokenVerification])
 
 router.route('/likes').get()
 
-router.get('/similar/:placeId', [
-  tokenVerification
-], placesController.similarPlaces)
+router
+  .get('/similar/:placeId', [
+    tokenVerification
+  ], placesController.similarPlaces)
 
-router.get('/recommendations/:placeId', [
-  tokenVerification
-], placesController.recommendedPlaces)
+router
+  .get('/recommendations/:placeId', [
+    tokenVerification
+  ], placesController.recommendedPlaces)
 
 // router.get('/likes', [
 //   tokenVerification
