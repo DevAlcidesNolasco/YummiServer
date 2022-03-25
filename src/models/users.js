@@ -1,6 +1,17 @@
 import { Schema, model } from 'mongoose'
 import bcrypt from 'bcrypt'
 
+const likesSchema = new Schema({
+  foods: [{
+    ref: 'Food',
+    type: Schema.Types.ObjectId
+  }],
+  places: [{
+    ref: 'Place',
+    type: Schema.Types.ObjectId
+  }]
+})
+
 const userSchema = new Schema({
   email: {
     type: String,
@@ -22,7 +33,8 @@ const userSchema = new Schema({
       ref: 'Role',
       type: Schema.Types.ObjectId
     }
-  ]
+  ],
+  likes: likesSchema
 }, {
   timestamps: true,
   versionKey: false

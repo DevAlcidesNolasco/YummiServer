@@ -1,4 +1,5 @@
 import Place from '../models/places'
+import User from '../models/users'
 import { isValidObjectId } from '../libs/validations'
 
 const errorHandler = ({ error }) => {
@@ -17,10 +18,6 @@ export const getAllPlaces = async (req, res) => {
   return res.json({ places })
 }
 
-// obtener distancia, ubicacion, y filtros de la busqueda
-// validar datos de entrada
-// buscar en la base de datos los sitios cercanos
-// contar el resultado
 export const getPlacesNear = async (req, res) => {
   let { distance = 300 } = req.body
   const { coordinates = [13.482903, -88.175427] } = req.body
@@ -42,8 +39,6 @@ export const getPlacesNear = async (req, res) => {
   return res.status(200).json({ result: places })
 }
 
-// obtener informacion de las propiedades del sitio
-// guarda en la base de datos el sitio
 export const createPlace = async (req, res) => {
   let { place } = req.body
   place = new Place({ ...place })
@@ -53,95 +48,57 @@ export const createPlace = async (req, res) => {
   })
 }
 
-// obtener ID del sitio
-// obtener objeto con nuevas valores del sitio
-// actualizar el sitio con ID
-export const updatePlace = async (req, res) => {
+export const updatePlaceById = async (req, res) => {
   const { placeId } = req.params
-  if (!placeId) {
-    return res.json({
-      message: 'No ha proporcionado id del lugar'
-    })
-  }
-  if (!isValidObjectId(placeId)) {
-    return res.json({
-      message: 'El id del lugar no es valido'
-    })
-  }
-  const updatedPlace = await Place.replaceOne({ _id: placeId }, req.body)
-  if (updatedPlace.n === 0) {
-    return res.json({
-      message: 'No existe ese lugar'
-    })
-  }
-  if (updatedPlace.nModified === 0) {
-    return res.json({
-      message: 'No se pudo editar el lugar'
-    })
-  }
-  res.json(updatedPlace)
+  const { place } = req.body
+  delete place._id
+  const updatedPlace = await Place.findOneAndUpdate({ _id: placeId }, { $set: { ...place } }, { new: true })
+  if (!updatedPlace) return res.json({ error: 'No se pudo realizar la accion' })
+  return res.status(200).json({
+    place: updatedPlace,
+    message: 'Se realizó accion exitosamente'
+  })
 }
-export const removePlace = async (req, res) => {
-  // obtener ID del sitio
-  // eliminar un sitio con ID
+export const deletePlaceById = async (req, res) => {
   const { placeId } = req.params
-  if (!placeId) {
-    return res.json({
-      message: 'No ha proporcionado id del lugar'
-    })
-  }
-  if (!isValidObjectId(placeId)) {
-    return res.json({
-      message: 'El id del lugar no es valido'
-    })
-  }
-  const placeDeleted = await Place.findOneAndDelete({ _id: placeId })
-  //  const placeDeleted = await Place.findByIdAndRemove(placeId)
-  if (!placeDeleted) {
-    return res.json({
-      message: 'No existe ese lugar'
-    })
-  }
+  const placeDeleted = await Place.findOneAndDelete({ _id: placeId }, { new: true })
+  if (!placeDeleted) return res.json({ message: 'No existe ese lugar' })
+  return res.status(200).json(placeDeleted)
+}
 
-  res.json(placeDeleted)
-}
 export const getPlaceById = async (req, res) => {
   const { placeId } = req.params
   const placeFound = await Place.findOne({ _id: placeId })
-  if (!placeFound) {
-    return res.json({
-      message: 'No existe ese lugar'
-    })
-  }
+  if (!placeFound) return res.json({ message: 'No existe ese lugar' })
   return res.status(200).json(placeFound)
 }
-export const recommendedPlaces = (req, res) => {
-  // buscar los cercanos con las categorias mas buscadas del usuario
-  // obtener categorias mas buscadas
-  // filtrar por los mejores valorados
-  const { placeId } = req.params
-  console.log(`Id Place is ${placeId}`)
-  console.log(req.body)
-  res.json({
-    message: 'Get Recommended Places'
+
+export const recommendedPlaces = async (req, res) => {
+  // obtener lugares que le gustan al usuario
+  // sacar las categorias de los lugares gustados
+  // buscar lugares por categorias iguales a las recuperadas
+  // mostrar array al usuario
+  const { sessionUId } = req.body
+  const userFound = await User.findOne({ _id: sessionUId }, { password: 0, roles: 0 })
+  if (!userFound) return res.json({ error: 'Usuario invalido' })
+  const { likes } = userFound
+  if (!likes) return res.json({ error: 'No se pudieron recuperar likes' })
+  const { places } = likes
+  if (!places) return res.json({ error: 'No se pudieron recuperar lugares gustados' })
+  const placesLikeds = await Place.find({ _id: { $in: places.map(x => x._id) } })
+  return res.status(200).json({
+    message: 'Get Recommended Places by',
+    places: placesLikeds,
+    user: userFound
   })
 }
+
 export const similarPlaces = async (req, res) => {
   // obtener ID del sitio
   // obtener categorias del sitio
   // buscar sitios con las categorias del ID
   const { placeId } = req.params
-  if (!placeId) {
-    return res.json({
-      message: 'No ha proporcionado id del lugar'
-    })
-  }
 
-  if (!isValidObjectId(placeId)) {
-    return res.json({
-      message: 'El id del lugar no es valido'
-    })
-  }
   const placeFound = await Place.findOne({
     _id: placeId
   }, {
@@ -158,6 +115,7 @@ export const similarPlaces = async (req, res) => {
     message: 'Get Similar in 500mts Places'
   })
 }
+
 export const getLikes = async (req, res) => {
   // obtener el ID del usuario
   // obtener todos los sitios que el usuario ha likeado
@@ -178,33 +136,33 @@ export const likeAPlace = async (req, res) => {
   // obtener el valor del Rating
   // obtener sitio del ID
   // modificar el arreglo con los likes del sitio
-  const { rating } = req.body
-  const { userId } = req
+  const { sessionUId } = req.body
   const { placeId } = req.params
-  if (!isValidObjectId(placeId)) {
-    return res.json({
-      message: 'El id del lugar no es valido'
-    })
+  const pushAnItem = ({ item, array }) => {
+    if (!Array.isArray(array)) {
+      array = []
+    }
+    return [...array, item]
   }
 
-  if ((rating > 5 || rating < 0) || !rating || isNaN(rating)) {
-    return res.json({
-      message: 'Calificacion no valida'
-    })
-  }
+  // if ((rating > 5 || rating < 0) || !rating || isNaN(rating)) {
+  //   return res.json({
+  //     message: 'Calificacion no valida'
+  //   })
+  // }
 
-  const place = await Place.findOne({ _id: placeId })
-  const found = place.rating.findIndex((rate) => rate.user.toString() === userId)
-  if (found > -1) {
-    place.rating[found].rate = rating
-  } else {
-    place.rating.push({
-      user: userId,
-      rate: rating
-    })
-  }
-  const ratingSaved = await place.save()
-  res.json(ratingSaved)
+  // const place = await Place.findOne({ _id: placeId })
+  // const found = place.rating.findIndex((rate) => rate.user.toString() === userId)
+  // if (found > -1) {
+  //   place.rating[found].rate = rating
+  // } else {
+  //   place.rating.push({
+  //     user: userId,
+  //     rate: rating
+  //   })
+  // }
+  // const ratingSaved = await place.save()
+  // res.json(ratingSaved)
 }
 const searchByCategories = (categories) => {
   for (const category of categories) {

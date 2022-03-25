@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { roleAssign, place as placeValidator } from '../libs/validations'
 import { roleValidation, tokenVerification } from '../middlewares/authorization'
-import { getAllPlaces, getPlacesNear, createPlace, getPlaceById, updatePlace } from '../controllers/places'
+import { getAllPlaces, getPlacesNear, createPlace, getPlaceById, updatePlaceById, deletePlaceById, recommendedPlaces } from '../controllers/places'
 const router = Router()
 
 // END POINTS
@@ -28,6 +28,23 @@ router.route('/all')
   ])
   .get(getAllPlaces)
 
+router.route('/recomendations')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
+    tokenVerification,
+    roleValidation
+  ])
+  .get(recommendedPlaces)
+
+router.route('/like')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
+    tokenVerification,
+    roleValidation
+  ])
+  // .get()
+  // .post('/:placeId', [placeValidator.placeId()], placeValidator.errors)
+
 router.route('/:placeId')
   .all([
     placeValidator.placeId()
@@ -37,12 +54,12 @@ router.route('/:placeId')
     (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'Seller'] }),
     tokenVerification,
     roleValidation
-  ], updatePlace)
+  ], updatePlaceById)
   .delete([
     (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'Seller'] }),
     tokenVerification,
     roleValidation
-  ])
+  ], deletePlaceById)
 
 // router.route('/likes').get()
 

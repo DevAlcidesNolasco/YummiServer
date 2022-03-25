@@ -12,7 +12,7 @@ const socialMediaSchema = new Schema({
 })
 const contactSchema = new Schema({
   socialMedia: [socialMediaSchema],
-  telephone: [String]
+  telephone: [Number]
 })
 const locationSchema = new Schema({
   type: {
@@ -38,7 +38,7 @@ const workDays = new Schema({
   to: String
 })
 const placeSchema = new Schema({
-  category: {
+  categories: {
     type: [String],
     required: [true, 'Categoria invalida']
   },
