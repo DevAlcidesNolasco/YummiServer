@@ -2,7 +2,9 @@ import User from '../models/users'
 import Role from '../models/roles'
 
 export const getAllUsers = async (req, res) => {
-  return res.status(200).json(await User.find({}, { password: 0, createdAt: 0, updatedAt: 0 }).populate('roles'))
+  const users = await User.find({}, { password: 0, createdAt: 0, updatedAt: 0 }).populate('roles')
+  if (!users) return res.json({ error: 'No se pudo recopilar información' })
+  return res.status(200).json({ users })
 }
 
 export const getUserById = async (req, res) => {

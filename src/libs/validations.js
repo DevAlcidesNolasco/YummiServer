@@ -1,19 +1,22 @@
-import { body, validationResult } from 'express-validator'
+import { body, param, validationResult } from 'express-validator'
 import { Types } from 'mongoose'
 const { ObjectId } = Types
 
 const getErrorMessageArray = (array) => array.map((error) => error.msg)
 
-export const objectIdValidation = (req, res, next) => {
-  let { userId } = req.params
+const throwErrors = (req, res, next) => {
+  const { errors } = validationResult(req)
+  if (errors.length > 0) return res.json({ errors: getErrorMessageArray(errors) })
+  next()
+}
+
+const idValid = ({ id }) => {
   try {
-    if (userId instanceof Object) return res.status(400).json({ error: 'Parametro id is an object' })
-    userId = new ObjectId(userId)
-    if (!ObjectId.isValid(userId)) return res.status(400).json({ error: 'Parametro id invalido' })
-    return next()
-    // console.info(userId)
+    id = new ObjectId(id)
+    if (!ObjectId.isValid(id)) return false
+    return true
   } catch (error) {
-    return res.json({ error: 'Parametro id invalido' })
+    return false
   }
 }
 
@@ -22,9 +25,17 @@ export const roleAssign = ({ req, next, roles }) => {
   return next()
 }
 
+export const user = {
+  userId: () => param('userId').custom((value) => idValid({ id: value })).withMessage('Parametro id no valido'),
+  errors: throwErrors
+}
+
 export const food = {}
 
-export const place = {}
+export const place = {
+  placeId: () => param('placeId').custom((value) => idValid({ id: value })).withMessage('Parametro id no valido'),
+  errors: throwErrors
+}
 
 export const auth = {
   email: () => body('email').trim().isEmail().withMessage('Formato de correo incorrecto').normalizeEmail(),
@@ -39,9 +50,5 @@ export const auth = {
       return value.every(element => roles.includes(element))
     }).withMessage('Roles asignados no validos')
   },
-  errors: (req, res, next) => {
-    const { errors } = validationResult(req)
-    if (errors.length > 0) return res.json({ errors: getErrorMessageArray(errors) })
-    next()
-  }
+  errors: throwErrors
 }

@@ -1,7 +1,7 @@
 import { Router } from 'express'
-// import { roleAssign } from '../libs/validations'
-import { /* roleValidation,   */ tokenVerification } from '../middlewares/authorization'
-import * as placesController from '../controllers/places'
+import { roleAssign, place as placeValidator } from '../libs/validations'
+import { roleValidation, tokenVerification } from '../middlewares/authorization'
+import { getAllPlaces, getPlacesNear, createPlace, getPlaceById, updatePlace } from '../controllers/places'
 const router = Router()
 
 // END POINTS
@@ -17,38 +17,57 @@ const router = Router()
 // +  mostrar lugares similares a lugar referente
 
 router.route('/')
-  .get(placesController.getPlaces)
-  .post(placesController.createPlace)
+  .get(getPlacesNear)
+  .post([], createPlace)
+
+router.route('/all')
+  .all([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin'] }),
+    tokenVerification,
+    roleValidation
+  ])
+  .get(getAllPlaces)
 
 router.route('/:placeId')
-  .get(placesController.getPlace)
-  .put([tokenVerification], placesController.putPlace)
-  .delete([tokenVerification])
+  .all([
+    placeValidator.placeId()
+  ], placeValidator.errors)
+  .get(getPlaceById)
+  .put([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'Seller'] }),
+    tokenVerification,
+    roleValidation
+  ], updatePlace)
+  .delete([
+    (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'Seller'] }),
+    tokenVerification,
+    roleValidation
+  ])
 
-router.route('/likes').get()
+// router.route('/likes').get()
 
-router
-  .get('/similar/:placeId', [
-    tokenVerification
-  ], placesController.similarPlaces)
+// router
+//   .get('/similar/:placeId', [
+//     tokenVerification
+//   ], placesController.similarPlaces)
 
-router
-  .get('/recommendations/:placeId', [
-    tokenVerification
-  ], placesController.recommendedPlaces)
+// router
+//   .get('/recommendations/:placeId', [
+//     tokenVerification
+//   ], placesController.recommendedPlaces)
 
-// router.get('/likes', [
+// // router.get('/likes', [
+// //   tokenVerification
+// // ], placesController.getLikes)
+
+// router.route('/:placeId')
+//   .get(placesController.getPlace)
+//   .put([tokenVerification], placesController.putPlace)
+//   .delete([tokenVerification])
+
+// router.post('/like/:placeId', [
 //   tokenVerification
-// ], placesController.getLikes)
-
-router.route('/:placeId')
-  .get(placesController.getPlace)
-  .put([tokenVerification], placesController.putPlace)
-  .delete([tokenVerification])
-
-router.post('/like/:placeId', [
-  tokenVerification
-], placesController.likeAPlace)
+// ], placesController.likeAPlace)
 
 // router.put('/:placeId', [
 //   tokenVerification

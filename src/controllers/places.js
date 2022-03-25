@@ -11,11 +11,17 @@ const errorHandler = ({ error }) => {
   }
 }
 
-export const getPlaces = async (req, res) => {
-  // obtener distancia, ubicacion, y filtros de la busqueda
-  // validar datos de entrada
-  // buscar en la base de datos los sitios cercanos
-  // contar el resultado
+export const getAllPlaces = async (req, res) => {
+  const places = await Place.find({})
+  if (!places) return res.json({ error: 'No se pudo recopilar información' })
+  return res.json({ places })
+}
+
+// obtener distancia, ubicacion, y filtros de la busqueda
+// validar datos de entrada
+// buscar en la base de datos los sitios cercanos
+// contar el resultado
+export const getPlacesNear = async (req, res) => {
   let { distance = 300 } = req.body
   const { coordinates = [13.482903, -88.175427] } = req.body
   distance = parseInt(distance, 10)
@@ -50,7 +56,7 @@ export const createPlace = async (req, res) => {
 // obtener ID del sitio
 // obtener objeto con nuevas valores del sitio
 // actualizar el sitio con ID
-export const putPlace = async (req, res) => {
+export const updatePlace = async (req, res) => {
   const { placeId } = req.params
   if (!placeId) {
     return res.json({
@@ -99,28 +105,15 @@ export const removePlace = async (req, res) => {
 
   res.json(placeDeleted)
 }
-export const getPlace = async (req, res) => {
-  // obtener ID del sitio
-  // obtener informacion del sitio con el ID
+export const getPlaceById = async (req, res) => {
   const { placeId } = req.params
-  if (!placeId) {
-    return res.json({
-      message: 'No ha proporcionado id del lugar'
-    })
-  }
-
-  if (!isValidObjectId(placeId)) {
-    return res.json({
-      message: 'El id del lugar no es valido'
-    })
-  }
   const placeFound = await Place.findOne({ _id: placeId })
   if (!placeFound) {
     return res.json({
       message: 'No existe ese lugar'
     })
   }
-  res.json(placeFound)
+  return res.status(200).json(placeFound)
 }
 export const recommendedPlaces = (req, res) => {
   // buscar los cercanos con las categorias mas buscadas del usuario

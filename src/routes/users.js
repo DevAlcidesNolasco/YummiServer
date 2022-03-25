@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import * as userController from '../controllers/users'
-import { roleAssign, objectIdValidation } from '../libs/validations'
+import { roleAssign, user as userValidator } from '../libs/validations'
 import { roleValidation, tokenVerification } from '../middlewares/authorization'
 const router = Router()
 
@@ -25,8 +25,8 @@ router.route('/:userId')
     (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
     tokenVerification,
     roleValidation,
-    objectIdValidation
-  ])
+    userValidator.userId()
+  ], userValidator.errors)
   .get(userController.getUserById)
   .put(userController.updateUserById)
   .delete(userController.deleteUserById)
