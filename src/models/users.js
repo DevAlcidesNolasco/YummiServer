@@ -2,14 +2,20 @@ import { Schema, model } from 'mongoose'
 import bcrypt from 'bcrypt'
 
 const likesSchema = new Schema({
-  foods: [{
-    ref: 'Food',
-    type: Schema.Types.ObjectId
-  }],
-  places: [{
-    ref: 'Place',
-    type: Schema.Types.ObjectId
-  }]
+  foods: {
+    type: [{
+      ref: 'Food',
+      type: Schema.Types.ObjectId
+    }],
+    default: [null]
+  },
+  places: {
+    type: [{
+      ref: 'Place',
+      type: Schema.Types.ObjectId
+    }],
+    default: [null]
+  }
 })
 
 const userSchema = new Schema({

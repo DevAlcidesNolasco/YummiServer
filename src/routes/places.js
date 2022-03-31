@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { roleAssign, place as placeValidator } from '../libs/validations'
 import { roleValidation, tokenVerification } from '../middlewares/authorization'
-import { getAllPlaces, getPlacesNear, createPlace, getPlaceById, updatePlaceById, deletePlaceById, recommendedPlaces } from '../controllers/places'
+import { getAllPlaces, getPlacesNear, createPlace, getPlaceById, updatePlaceById, deletePlaceById, recommendedPlaces, likeAPlace } from '../controllers/places'
 const router = Router()
 
 // END POINTS
@@ -36,14 +36,15 @@ router.route('/recomendations')
   ])
   .get(recommendedPlaces)
 
-router.route('/like')
+router.route('/like/:placeId')
   .all([
     (req, res, next) => roleAssign({ req, next, roles: ['Moderator', 'Admin', 'User'] }),
     tokenVerification,
     roleValidation
   ])
-  // .get()
-  // .post('/:placeId', [placeValidator.placeId()], placeValidator.errors)
+  .post([
+    placeValidator.placeId()
+  ], placeValidator.errors, likeAPlace)
 
 router.route('/:placeId')
   .all([

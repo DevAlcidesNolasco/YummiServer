@@ -40,7 +40,7 @@ export const register = async (req, res) => {
   const { email, password, fullName, roles } = req.body
   const existingUser = await User.findOne({ email })
   if (existingUser) return res.json({ message: 'Ese correo ya esta registrado' })
-  const newUser = new User({ email, password: await User.encryptPassword({ password }), fullName })
+  const newUser = new User({ email, password: await User.encryptPassword({ password }), fullName, likes: { foods: [], places: [] } })
   if (roles) {
     const foundRoles = await Role.find({ name: { $in: roles } })
     newUser.roles = foundRoles.map(role => role._id)

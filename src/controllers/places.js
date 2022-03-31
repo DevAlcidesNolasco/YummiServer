@@ -1,6 +1,6 @@
 import Place from '../models/places'
 import User from '../models/users'
-import { isValidObjectId } from '../libs/validations'
+// import { isValidObjectId } from '../libs/validations'
 
 const errorHandler = ({ error }) => {
   const { errors } = error
@@ -98,7 +98,6 @@ export const similarPlaces = async (req, res) => {
   // obtener categorias del sitio
   // buscar sitios con las categorias del ID
   const { placeId } = req.params
-
   const placeFound = await Place.findOne({
     _id: placeId
   }, {
@@ -131,19 +130,26 @@ export const getLikes = async (req, res) => {
   //  console.log('Get Liked Places')
   res.json(likedPlaces)
 }
+
 export const likeAPlace = async (req, res) => {
-  // obtener ID del sitio y el usuario
-  // obtener el valor del Rating
-  // obtener sitio del ID
-  // modificar el arreglo con los likes del sitio
-  const { sessionUId } = req.body
   const { placeId } = req.params
-  const pushAnItem = ({ item, array }) => {
-    if (!Array.isArray(array)) {
-      array = []
-    }
-    return [...array, item]
-  }
+  const { sessionUId } = req.body
+  const userFound = await User.findOne({ _id: sessionUId })
+  const placeFound = await Place.findOne({ _id: placeId })
+  if (!placeFound) return res.json({ error: 'No se pudo encontrar el lugar' })
+  userFound.likes.places.push(placeId)
+  userFound.save(function (error) {
+    if (error) return res.status(400).json(errorHandler({ error }))
+    return res.status(200).json(userFound)
+  })
+  // const pushAnItem = ({ item, array }) => {
+  //   if (!Array.isArray(array)) {
+  //     array = []
+  //   }
+  //   return [...array, item]
+  // }
+  // places = pushAnItem({ item: placeId, array: places })
+  // return res.json({ message: userFound })
 
   // if ((rating > 5 || rating < 0) || !rating || isNaN(rating)) {
   //   return res.json({

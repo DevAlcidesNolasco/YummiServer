@@ -17,8 +17,8 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { userId } = req.params
   const { user } = req.body
-  delete user._id
-  delete user.password
+  if (user._id) delete user._id
+  if (user.password) delete user.password
   const updatedUser = await User.findOneAndUpdate({ _id: userId }, { $set: { ...user } }, { new: true, projection: { password: 0 } })
   if (!updatedUser) return res.status(400).json({ error: 'No se pudo realizar la acción' })
   return res.status(200).json({

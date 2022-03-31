@@ -2,11 +2,9 @@ import { body, param, validationResult } from 'express-validator'
 import { Types } from 'mongoose'
 const { ObjectId } = Types
 
-const getErrorMessageArray = (array) => array.map((error) => error.msg)
-
 const throwErrors = (req, res, next) => {
   const { errors } = validationResult(req)
-  if (errors.length > 0) return res.json({ errors: getErrorMessageArray(errors) })
+  if (errors.length > 0) return res.json({ error: errors.map((error) => error.msg) })
   next()
 }
 
